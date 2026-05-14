@@ -11,12 +11,39 @@ const int TAM_COMANDO = 30;
 // TODO: definir as structs principais do trabalho.
 //
 // Sugestao de structs que provavelmente serao necessarias:
-// - Usuario
+struct Usuario {
+    int id;
+    char username[TAM_USERNAME];
+    char nomeCompleto[TAM_NOME];
+};
 // - Publicacao
 // - MiniRede
 // - nos para lista encadeada
+struct NoLista {
+    int valor;
+    NoLista* prox;
+};
+
+struct Lista {
+    NoLista* inicio;
+};
+
 // - nos para arvore binaria de usuarios por id
+struct NoArvoreUsuario {
+    Usuario usuario;
+    NoArvoreUsuario* esq;
+    NoArvoreUsuario* dir;
+};
+
 // - nos para tabela hash de usernames
+struct No {
+    int chave;
+    No* prox;
+};
+struct HashEncadeada {
+    //No* tabela[TAM];
+};
+
 // - nos para fila de notificacoes
 //
 // Os campos de cada struct fazem parte do projeto dos alunos.
@@ -25,7 +52,7 @@ struct MiniRede {
     // TODO: declarar aqui os ponteiros/estruturas principais da rede.
     //
     // Exemplos de responsabilidades:
-    // - usuarios armazenados por id
+    NoArvoreUsuario* raizArvoreUsuario;
     // - usuarios acessiveis por username
     // - publicacoes cadastradas
 };
@@ -48,6 +75,8 @@ void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& s
 void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& saida);
 void gerarFeed(MiniRede& rede, int idUsuario, int k, std::ostream& saida);
 void listarTopPosts(MiniRede& rede, int k, std::ostream& saida);
+
+bool buscarNaArvorePorId(NoArvoreUsuario* no, int id, std::ostream& saida);
 
 // TODO: declarar aqui as funcoes auxiliares escolhidas pelo grupo.
 //

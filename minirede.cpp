@@ -1,8 +1,9 @@
 #include "minirede.h"
+#include <cstring>
 
 void inicializarMiniRede(MiniRede& rede) {
-    // TODO
-}
+    rede.raizArvoreUsuario = nullptr; 
+}  
 
 void liberarMiniRede(MiniRede& rede) {
     // TODO
@@ -14,12 +15,57 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
     // Nao imprimir menu, prompt ou texto extra.
 }
 
+void inserirNaArvore(NoArvoreUsuario*& raiz, const Usuario& usuario, std::ostream& saida) {
+    if (raiz == nullptr) {
+        raiz = new NoArvoreUsuario{usuario, nullptr, nullptr};
+        saida << "USER_ADDED";
+        return;
+    }
+    if (usuario.id == raiz->usuario.id) {
+        saida << "ERROR USER_EXISTS";
+        return;
+    }
+    
+    if (usuario.id < raiz->usuario.id) {
+        inserirNaArvore(raiz->esq, usuario, saida);
+    }
+    if (usuario.id > raiz->usuario.id) {
+        inserirNaArvore(raiz->dir, usuario, saida);
+    }
+}
+
 void cadastrarUsuario(MiniRede& rede, int id, const char username[], const char nomeCompleto[], std::ostream& saida) {
-    // TODO
+    Usuario usuarioNovo;
+    usuarioNovo.id = id;
+    strncpy(usuarioNovo.username, username, TAM_USERNAME - 1);
+    usuarioNovo.username[TAM_USERNAME - 1] = '\0';
+    strncpy(usuarioNovo.nomeCompleto, nomeCompleto, TAM_NOME - 1);
+    usuarioNovo.nomeCompleto[TAM_NOME - 1] = '\0';
+
+    inserirNaArvore(rede.raizArvoreUsuario, usuarioNovo, saida);
+}
+
+bool buscarNaArvorePorId(NoArvoreUsuario* no, int id, std::ostream& saida) {
+    bool achado = false;
+
+    if (no == nullptr) {
+        saida << "ERROR USER_NOT_FOUND";
+    }
+
+    if (no->usuario.id == id) {
+        saida << "USER" << no->usuario.id << no->usuario.username << no->usuario.nomeCompleto;
+    }
+    else if (no->usuario.id > id) {
+        achado = buscarNaArvorePorId(no->esq, id, saida);
+    }
+    else if (no->usuario.id < id) {
+        achado = buscarNaArvorePorId(no->dir, id, saida);
+    }
+    return achado;
 }
 
 void buscarUsuarioPorId(MiniRede& rede, int id, std::ostream& saida) {
-    // TODO
+    buscarNaArvorePorId(rede.raizArvoreUsuario, id, saida);
 }
 
 void buscarUsuarioPorUsername(MiniRede& rede, const char username[], std::ostream& saida) {

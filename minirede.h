@@ -76,7 +76,7 @@ void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& s
 void gerarFeed(MiniRede& rede, int idUsuario, int k, std::ostream& saida);
 void listarTopPosts(MiniRede& rede, int k, std::ostream& saida);
 
-bool buscarNaArvorePorId(NoArvoreUsuario* no, int id, std::ostream& saida);
+void buscarNaArvorePorId(NoArvoreUsuario* no, int id, std::ostream& saida);
 
 // TODO: declarar aqui as funcoes auxiliares escolhidas pelo grupo.
 //

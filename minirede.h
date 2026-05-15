@@ -61,9 +61,9 @@ void gerarFeed(MiniRede& rede, int idUsuario, int k, std::ostream& saida);
 void listarTopPosts(MiniRede& rede, int k, std::ostream& saida);
 
 void liberarArvore(NoArvoreUsuario*& raiz);
-void inserirNaArvore(NoArvoreUsuario*& raiz, const Usuario& usuario, std::ostream& saida);
+Usuario* inserirNaArvore(NoArvoreUsuario*& raiz, const Usuario& usuario, std::ostream& saida);
 void buscarNaArvorePorId(NoArvoreUsuario* raiz, int id, std::ostream& saida);
-bool buscarNaArvorePorUsername(NoArvoreUsuario* raiz, const char username[], std::ostream& saida);
+void buscarNoHash(MiniRede& rede, const char username[], std::ostream& saida);
 void listarUsuariosEmOrdemId(NoArvoreUsuario* raiz, std::ostream& saida);
 
 #endif

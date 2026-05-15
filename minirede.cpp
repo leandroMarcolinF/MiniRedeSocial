@@ -3,7 +3,10 @@
 #include <sstream>
 
 void inicializarMiniRede(MiniRede& rede) {
-    rede.raizArvoreUsuario = nullptr; 
+    rede.raizArvoreUsuario = nullptr;
+    for (int i = 0; i < TAM_HASH; i++) {
+        rede.tabelaHashUsuario[i] = nullptr;
+    }
 }
 
 void liberarArvore(NoArvoreUsuario*& raiz) {
@@ -18,10 +21,21 @@ void liberarArvore(NoArvoreUsuario*& raiz) {
     raiz = nullptr;
 }
 
+void liberarHash(MiniRede& rede) {
+    for (int i = 0; i < TAM_HASH; i++) {
+        NoHashUsuario* atual = rede.tabelaHashUsuario[i];
+        while (atual != nullptr) {
+            NoHashUsuario* proximo = atual->proximo;
+            delete atual;
+            atual = proximo;
+        }
+        rede.tabelaHashUsuario[i] = nullptr;
+}
+}
+
 void liberarMiniRede(MiniRede& rede) {
     liberarArvore(rede.raizArvoreUsuario);
-    //liberarHash
-    //liberarListaEncadeada
+    liberarHash(rede);
 }
 
 void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& saida) {
@@ -46,30 +60,52 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
             buscarUsuarioPorId(rede, id, saida);
         } else if (comando == "LIST_USERS") {
             listarUsuarios(rede, saida);
+        } else if (comando == "FIND_USERNAME") {
+            std::string username;
+            stream >> username;
+            buscarUsuarioPorUsername(rede, username.c_str(), saida);
         } else {
             saida << "ERROR INVALID_COMMAND" << std::endl;
         }
     }
 }
 
-void inserirNaArvore(NoArvoreUsuario*& raiz, const Usuario& usuario, std::ostream& saida) {
+Usuario* inserirNaArvore(NoArvoreUsuario*& raiz, const Usuario& usuario, std::ostream& saida) {
     if (raiz == nullptr) {
         Usuario* novoUsuario = new Usuario(usuario);
         raiz = new NoArvoreUsuario{novoUsuario, nullptr, nullptr};
         saida << "USER_ADDED" << std::endl;
-        return;
+        return novoUsuario;
     }
     if (usuario.id == raiz->usuario->id) {
         saida << "ERROR USER_EXISTS" << std::endl;
-        return;
+        return nullptr;
     }
 
     if (usuario.id < raiz->usuario->id) {
-        inserirNaArvore(raiz->esq, usuario, saida);
+        return inserirNaArvore(raiz->esq, usuario, saida);
     }
-    if (usuario.id > raiz->usuario->id) {
-        inserirNaArvore(raiz->dir, usuario, saida);
+
+    return inserirNaArvore(raiz->dir, usuario, saida);
+}
+
+int funcaoHash(const char username[]) {
+    unsigned int chave = 0;
+
+    for (int pos = 0; username[pos] != '\0'; pos++) {
+        chave = chave * 31 + username[pos];
     }
+
+    return chave % TAM_HASH;
+}
+
+void inserirNoHash(MiniRede& rede, Usuario* usuario) {
+    int indice = funcaoHash(usuario->username);
+    
+    NoHashUsuario* noHash = new NoHashUsuario;
+    noHash->usuario = usuario;
+    noHash->proximo = rede.tabelaHashUsuario[indice];
+    rede.tabelaHashUsuario[indice] = noHash;
 }
 
 void cadastrarUsuario(MiniRede& rede, int id, const char username[], const char nomeCompleto[], std::ostream& saida) {
@@ -81,7 +117,10 @@ void cadastrarUsuario(MiniRede& rede, int id, const char username[], const char 
     usuarioNovo.nomeCompleto[TAM_NOME - 1] = '\0';
     usuarioNovo.listaSeguidores.inicio = nullptr;
 
-    inserirNaArvore(rede.raizArvoreUsuario, usuarioNovo, saida);
+    Usuario* inserido = inserirNaArvore(rede.raizArvoreUsuario, usuarioNovo, saida);
+    if (inserido != nullptr) {
+        inserirNoHash(rede, inserido);
+    }
 }
 
 void buscarNaArvorePorId(NoArvoreUsuario* raiz, int id, std::ostream& saida) {
@@ -109,16 +148,27 @@ void buscarUsuarioPorId(MiniRede& rede, int id, std::ostream& saida) {
     buscarNaArvorePorId(rede.raizArvoreUsuario, id, saida);
 }
 
-bool buscarNaArvorePorUsername(NoArvoreUsuario* raiz, const char username[], std::ostream& saida) {
-    bool achado = false;
+void buscarNoHash(MiniRede& rede, const char username[], std::ostream& saida) {
+    int indice = funcaoHash(username);
+    NoHashUsuario* atual = rede.tabelaHashUsuario[indice];
 
-    return achado;
+    while (atual != nullptr) {
+        if (strncmp(atual->usuario->username, username, TAM_USERNAME) == 0) {
+            saida << "USER "
+                << atual->usuario->id << " "
+                << atual->usuario->username << " "
+                << atual->usuario->nomeCompleto
+                << std::endl;
+            return;
+        }
+        atual = atual->proximo;
+    }
+
+    saida << "ERROR USER_NOT_FOUND" << std::endl;
 }
 
 void buscarUsuarioPorUsername(MiniRede& rede, const char username[], std::ostream& saida) {
-    if (!buscarNaArvorePorUsername(rede.raizArvoreUsuario, username, saida)) {
-        saida << "ERROR USER_NOT_FOUND" << std::endl; 
-    }
+    buscarNoHash(rede, username, saida);
 }
 
 void listarUsuariosEmOrdemId(NoArvoreUsuario* raiz, std::ostream& saida ) {

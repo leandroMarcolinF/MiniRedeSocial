@@ -7,53 +7,37 @@ const int TAM_USERNAME = 50;
 const int TAM_NOME = 100;
 const int TAM_TEXTO = 280;
 const int TAM_COMANDO = 30;
+const int TAM_HASH = 101;
 
-// TODO: definir as structs principais do trabalho.
-//
-// Sugestao de structs que provavelmente serao necessarias:
+struct NoSeguidor {
+    int id;
+    NoSeguidor* prox;
+};
+
+struct ListaSeguidores {
+    NoSeguidor* inicio;
+};
+
 struct Usuario {
     int id;
     char username[TAM_USERNAME];
     char nomeCompleto[TAM_NOME];
+    ListaSeguidores listaSeguidores;
 };
-// - Publicacao
-// - MiniRede
-// - nos para lista encadeada
-struct NoLista {
-    int valor;
-    NoLista* prox;
-};
-
-struct Lista {
-    NoLista* inicio;
-};
-
-// - nos para arvore binaria de usuarios por id
 struct NoArvoreUsuario {
-    Usuario usuario;
+    Usuario* usuario;
     NoArvoreUsuario* esq;
     NoArvoreUsuario* dir;
 };
 
-// - nos para tabela hash de usernames
-struct No {
-    int chave;
-    No* prox;
+struct NoHashUsuario {
+    Usuario* usuario;
+    NoHashUsuario* proximo;
 };
-struct HashEncadeada {
-    //No* tabela[TAM];
-};
-
-// - nos para fila de notificacoes
-//
-// Os campos de cada struct fazem parte do projeto dos alunos.
 
 struct MiniRede {
-    // TODO: declarar aqui os ponteiros/estruturas principais da rede.
-    //
-    // Exemplos de responsabilidades:
     NoArvoreUsuario* raizArvoreUsuario;
-    // - usuarios acessiveis por username
+    NoHashUsuario* tabelaHashUsuario[TAM_HASH];
     // - publicacoes cadastradas
 };
 
@@ -76,18 +60,10 @@ void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& s
 void gerarFeed(MiniRede& rede, int idUsuario, int k, std::ostream& saida);
 void listarTopPosts(MiniRede& rede, int k, std::ostream& saida);
 
-void buscarNaArvorePorId(NoArvoreUsuario* no, int id, std::ostream& saida);
-
-// TODO: declarar aqui as funcoes auxiliares escolhidas pelo grupo.
-//
-// Exemplos de responsabilidades auxiliares:
-// - buscar usuario por id
-// - buscar usuario por username
-// - buscar publicacao por id
-// - inserir/listar/liberar arvore
-// - inserir/buscar/liberar tabela hash
-// - enfileirar/desenfileirar notificacoes
-// - manipular listas encadeadas
-// - ordenar vetores auxiliares para feed e ranking
+void liberarArvore(NoArvoreUsuario*& raiz);
+void inserirNaArvore(NoArvoreUsuario*& raiz, const Usuario& usuario, std::ostream& saida);
+void buscarNaArvorePorId(NoArvoreUsuario* raiz, int id, std::ostream& saida);
+bool buscarNaArvorePorUsername(NoArvoreUsuario* raiz, const char username[], std::ostream& saida);
+void listarUsuariosEmOrdemId(NoArvoreUsuario* raiz, std::ostream& saida);
 
 #endif

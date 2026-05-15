@@ -13,12 +13,15 @@ void liberarArvore(NoArvoreUsuario*& raiz) {
     
     liberarArvore(raiz->esq);
     liberarArvore(raiz->dir);
+    delete raiz->usuario;
     delete raiz;
     raiz = nullptr;
 }
 
 void liberarMiniRede(MiniRede& rede) {
     liberarArvore(rede.raizArvoreUsuario);
+    //liberarHash
+    //liberarListaEncadeada
 }
 
 void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& saida) {
@@ -51,19 +54,20 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
 
 void inserirNaArvore(NoArvoreUsuario*& raiz, const Usuario& usuario, std::ostream& saida) {
     if (raiz == nullptr) {
-        raiz = new NoArvoreUsuario{usuario, nullptr, nullptr};
+        Usuario* novoUsuario = new Usuario(usuario);
+        raiz = new NoArvoreUsuario{novoUsuario, nullptr, nullptr};
         saida << "USER_ADDED" << std::endl;
         return;
     }
-    if (usuario.id == raiz->usuario.id) {
-        saida << "ERROR USER_EXISTS" << std::endl; 
+    if (usuario.id == raiz->usuario->id) {
+        saida << "ERROR USER_EXISTS" << std::endl;
         return;
     }
-    
-    if (usuario.id < raiz->usuario.id) {
+
+    if (usuario.id < raiz->usuario->id) {
         inserirNaArvore(raiz->esq, usuario, saida);
     }
-    if (usuario.id > raiz->usuario.id) {
+    if (usuario.id > raiz->usuario->id) {
         inserirNaArvore(raiz->dir, usuario, saida);
     }
 }
@@ -75,6 +79,7 @@ void cadastrarUsuario(MiniRede& rede, int id, const char username[], const char 
     usuarioNovo.username[TAM_USERNAME - 1] = '\0';
     strncpy(usuarioNovo.nomeCompleto, nomeCompleto, TAM_NOME - 1);
     usuarioNovo.nomeCompleto[TAM_NOME - 1] = '\0';
+    usuarioNovo.listaSeguidores.inicio = nullptr;
 
     inserirNaArvore(rede.raizArvoreUsuario, usuarioNovo, saida);
 }
@@ -85,17 +90,17 @@ void buscarNaArvorePorId(NoArvoreUsuario* raiz, int id, std::ostream& saida) {
         return;
     }
 
-    if (raiz->usuario.id == id) {
+    if (raiz->usuario->id == id) {
         saida << "USER "
-            << raiz->usuario.id << " "
-            << raiz->usuario.username << " "
-            << raiz->usuario.nomeCompleto
+            << raiz->usuario->id << " "
+            << raiz->usuario->username << " "
+            << raiz->usuario->nomeCompleto
             << std::endl;
     }
-    else if (raiz->usuario.id > id) {
+    else if (raiz->usuario->id > id) {
         buscarNaArvorePorId(raiz->esq, id, saida);
     }
-    else if (raiz->usuario.id < id) {
+    else if (raiz->usuario->id < id) {
         buscarNaArvorePorId(raiz->dir, id, saida);
     }
 }
@@ -106,25 +111,6 @@ void buscarUsuarioPorId(MiniRede& rede, int id, std::ostream& saida) {
 
 bool buscarNaArvorePorUsername(NoArvoreUsuario* raiz, const char username[], std::ostream& saida) {
     bool achado = false;
-
-    if (achado == true) {
-        return achado;
-    }
-    
-    if (raiz == nullptr) {
-        return achado;
-    };
-    
-    if (raiz->usuario.username == username) {
-        saida << "USER "
-            << raiz->usuario.id << " "
-            << raiz->usuario.username << " "
-            << raiz->usuario.nomeCompleto
-            << std::endl;
-        return true;
-    }
-    buscarNaArvorePorUsername(raiz->esq, username, saida);
-    buscarNaArvorePorUsername(raiz->esq, username, saida);
 
     return achado;
 }
@@ -142,9 +128,9 @@ void listarUsuariosEmOrdemId(NoArvoreUsuario* raiz, std::ostream& saida ) {
     
     listarUsuariosEmOrdemId(raiz->esq, saida);
     saida << "USER "
-        << raiz->usuario.id << " "
-        << raiz->usuario.username << " "
-        << raiz->usuario.nomeCompleto
+        << raiz->usuario->id << " "
+        << raiz->usuario->username << " "
+        << raiz->usuario->nomeCompleto
         << std::endl;
     listarUsuariosEmOrdemId(raiz->dir, saida);
 }
@@ -153,9 +139,52 @@ void listarUsuarios(MiniRede& rede, std::ostream& saida) {
     listarUsuariosEmOrdemId(rede.raizArvoreUsuario, saida);
 }
 
-void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& saida) {
-    // TODO
-}
+// ListaSeguidores pegaListaSeguidores(NoArvoreUsuario* raiz, int id) {
+//     ListaSeguidores listaSeguidores;
+
+//     if (raiz->usuario->id == id) {
+//         return raiz->usuario->listaSeguidores;
+//     }
+//     else if (raiz->usuario->id > id) {
+//         pegaListaSeguidores(raiz->esq, id);
+//     }
+//     else if (raiz->usuario->id < id) {
+//         pegaListaSeguidores(raiz->dir, id);
+//     }
+
+//     return listaSeguidores;
+// }
+
+// void inserirSeguidorOrdenado(ListaSeguidores &L, int id) {
+//     NoSeguidor* no = new NoSeguidor{id, nullptr};
+//     NoSeguidor* atual = L.inicio;
+//     NoSeguidor* anterior = nullptr;
+
+//     while (atual != nullptr && atual->id <= id) {
+//         anterior = atual;
+//         atual = atual->prox;
+//     }
+
+//     no->prox = atual;
+//     if (anterior == nullptr)
+//         L.inicio = no;
+//     else
+//         anterior->prox = no;
+// }
+
+// void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& saida) {
+//     if (idSeguidor == idSeguido) {
+//         saida << "ERROR USER_NOT_FOUND" << std::endl;
+//         return;
+//     }
+
+//     buscarUsuarioPorId(rede, idSeguido, saida);
+//     buscarUsuarioPorId(rede, idSeguidor, saida);
+
+//     ListaSeguidores listaSeguidores = pegaListaSeguidores(rede.raizArvoreUsuario, idSeguido);
+
+//     inserirSeguidorOrdenado(listaSeguidores, idSeguidor);
+// }
 
 void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
     // TODO

@@ -267,7 +267,27 @@ void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& 
 }
 
 void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
-    // TODO
+    Usuario* usuarioAchado = buscarNaArvorePorId(rede.raizArvoreUsuario, idUsuario);
+    if (usuarioAchado == nullptr) {
+        saida << "ERROR USER_NOT_FOUND" << std::endl;
+        return;
+    }
+
+    NoSeguidor* atual = usuarioAchado->listaSeguidores.inicio;
+
+    saida << "FOLLOWING_BEGIN" << std::endl;
+    while (atual != nullptr) {
+        Usuario* seguido = buscarNaArvorePorId(rede.raizArvoreUsuario, atual->id);
+        if (seguido != nullptr) {
+            saida << "USER "
+                << seguido->id << " "
+                << seguido->username << " "
+                << seguido->nomeCompleto
+                << std::endl;
+        }
+        atual = atual->prox;
+    }
+    saida << "FOLLOWING_END" << std::endl;
 }
 
 void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp, const char texto[], std::ostream& saida) {

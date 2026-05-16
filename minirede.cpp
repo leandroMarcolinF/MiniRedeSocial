@@ -200,22 +200,6 @@ void listarUsuarios(MiniRede& rede, std::ostream& saida) {
     listarUsuariosEmOrdemId(rede.raizArvoreUsuario, saida);
 }
 
-// ListaSeguidores pegaListaSeguidores(NoArvoreUsuario* raiz, int id) {
-//     ListaSeguidores listaSeguidores;
-
-//     if (raiz->usuario->id == id) {
-//         return raiz->usuario->listaSeguidores;
-//     }
-//     else if (raiz->usuario->id > id) {
-//         pegaListaSeguidores(raiz->esq, id);
-//     }
-//     else if (raiz->usuario->id < id) {
-//         pegaListaSeguidores(raiz->dir, id);
-//     }
-
-//     return listaSeguidores;
-// }
-
 bool inserirSeguidorOrdenado(ListaSeguidores &L, int id) {
     NoSeguidor* no = new NoSeguidor{id, nullptr};
     NoSeguidor* atual = L.inicio;
@@ -256,8 +240,6 @@ void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& 
         saida << "ERROR USER_NOT_FOUND" << std::endl;
         return;
     }
-
-    // ListaSeguidores listaSeguidores = pegaListaSeguidores(rede.raizArvoreUsuario, idSeguido);
 
     if(!inserirSeguidorOrdenado(usuarioAchado->listaSeguidores, idSeguidor)) {
         saida << "ERROR ALREADY_FOLLOWING" << std::endl;

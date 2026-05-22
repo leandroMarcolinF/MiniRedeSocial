@@ -1,12 +1,14 @@
 CC := g++
 LDFLAGS := -lm
 
-TARGET := minirede.out
+TARGET := minirede
 
 SRC := minirede.cpp
 OBJ := $(SRC:.cpp=.o)
 
-.PHONY: all clean run
+INPUT ?= testes/pequeno/entrada.txt
+
+.PHONY: all clean run test
 
 all: $(TARGET)
 
@@ -23,3 +25,7 @@ clean:
 run: $(TARGET)
 	clear
 	./$(TARGET)
+
+test: $(TARGET)
+	clear
+	./$(TARGET) < $(INPUT)

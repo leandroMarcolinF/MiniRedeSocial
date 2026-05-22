@@ -1,5 +1,5 @@
 CC := g++
-LDFLAGS := -lm
+LDFLAGS := -lm -lreadline
 
 TARGET := minirede
 

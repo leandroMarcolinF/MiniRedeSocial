@@ -43,7 +43,8 @@ struct MiniRede {
 
 void inicializarMiniRede(MiniRede& rede);
 void liberarMiniRede(MiniRede& rede);
-void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& saida);
+//void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& saida);
+void processarComandos(MiniRede& rede, std::ostream& saida);
 
 void cadastrarUsuario(MiniRede& rede, int id, const char username[], const char nomeCompleto[], std::ostream& saida);
 void buscarUsuarioPorId(MiniRede& rede, int id, std::ostream& saida);

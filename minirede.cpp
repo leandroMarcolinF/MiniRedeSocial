@@ -1,6 +1,9 @@
 #include "minirede.h"
 #include <cstring>
+#include <new>
 #include <sstream>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 void inicializarMiniRede(MiniRede& rede) {
     rede.raizArvoreUsuario = nullptr;
@@ -38,7 +41,7 @@ void liberarMiniRede(MiniRede& rede) {
     liberarHash(rede);
 }
 
-void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& saida) {
+/*void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& saida) {
     std::string linha;
     std::string comando;
 
@@ -72,6 +75,60 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
             int id;
             stream >> id;
             listarSeguindo(rede, id, saida);
+        } else {
+            saida << "ERROR INVALID_COMMAND" << std::endl;
+        }
+    }
+}*/
+
+void processarComandos(MiniRede& rede, std::ostream& saida) {
+    char* input;
+
+    while ((input = readline("> ")) != nullptr) {
+        std::string linha(input);
+
+        if (!linha.empty()) {
+            add_history(input);
+        }
+
+        free(input);
+
+        std::istringstream stream(linha);
+
+        std::string comando;
+        stream >> comando;
+
+        if (comando == "END") {
+            break;
+        } else if (comando == "ADD_USER") {
+            int id;
+            std::string username, nomeCompleto;
+            stream >> id >> username >> nomeCompleto;
+            cadastrarUsuario(rede, id, username.c_str(), nomeCompleto.c_str(), saida);
+
+        } else if (comando == "FIND_USER") {
+            int id;
+            stream >> id;
+            buscarUsuarioPorId(rede, id, saida);
+
+        } else if (comando == "LIST_USERS") {
+            listarUsuarios(rede, saida);
+
+        } else if (comando == "FIND_USERNAME") {
+            std::string username;
+            stream >> username;
+            buscarUsuarioPorUsername(rede, username.c_str(), saida);
+
+        } else if (comando == "FOLLOW") {
+            int idSeguidor, idSeguido;
+            stream >> idSeguidor >> idSeguido;
+            seguirUsuario(rede, idSeguidor, idSeguido, saida);
+
+        } else if (comando == "LIST_FOLLOWING") {
+            int id;
+            stream >> id;
+            listarSeguindo(rede, id, saida);
+
         } else {
             saida << "ERROR INVALID_COMMAND" << std::endl;
         }
@@ -263,7 +320,7 @@ void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
         if (seguido != nullptr) {
             saida << "USER "
                 << seguido->id << " "
-                << seguido->username << " "
+                << seguido->username << " " 
                 << seguido->nomeCompleto
                 << std::endl;
         }
@@ -296,7 +353,8 @@ int main() {
     MiniRede rede;
 
     inicializarMiniRede(rede);
-    processarComandos(rede, std::cin, std::cout);
+    //processarComandos(rede, std::cin, std::cout);
+    processarComandos(rede, std::cout);
     liberarMiniRede(rede);
 
     return 0;

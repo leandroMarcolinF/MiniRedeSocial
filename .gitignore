@@ -1,3 +1,4 @@
 *.o
+*.out
 ordem_do_que_fazer.txt
 /.vscode/

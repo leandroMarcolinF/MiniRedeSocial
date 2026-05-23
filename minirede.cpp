@@ -201,7 +201,6 @@ void listarUsuarios(MiniRede& rede, std::ostream& saida) {
 }
 
 bool inserirSeguidorOrdenado(ListaSeguidores &L, int id) {
-    NoSeguidor* no = new NoSeguidor{id, nullptr};
     NoSeguidor* atual = L.inicio;
     NoSeguidor* anterior = nullptr;
 
@@ -213,7 +212,7 @@ bool inserirSeguidorOrdenado(ListaSeguidores &L, int id) {
         atual = atual->prox;
     }
 
-    no->prox = atual;
+    NoSeguidor* no = new NoSeguidor{id, atual};
     if (anterior == nullptr) {
         L.inicio = no;
     } else {
@@ -228,21 +227,18 @@ void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& 
         saida << "ERROR CANNOT_FOLLOW_SELF" << std::endl;
         return;
     }
-    
-    Usuario* usuarioAchado = buscarNaArvorePorId(rede.raizArvoreUsuario, idSeguidor);
-    if (usuarioAchado == nullptr) {
+
+    Usuario* seguidor = buscarNaArvorePorId(rede.raizArvoreUsuario, idSeguidor);
+    Usuario* seguido  = buscarNaArvorePorId(rede.raizArvoreUsuario, idSeguido);
+
+    if (seguidor == nullptr || seguido == nullptr) {
         saida << "ERROR USER_NOT_FOUND" << std::endl;
         return;
     }
 
-    usuarioAchado = buscarNaArvorePorId(rede.raizArvoreUsuario, idSeguido);
-    if (usuarioAchado == nullptr) {
-        saida << "ERROR USER_NOT_FOUND" << std::endl;
-        return;
-    }
-
-    if(!inserirSeguidorOrdenado(usuarioAchado->listaSeguidores, idSeguidor)) {
+    if (!inserirSeguidorOrdenado(seguidor->listaSeguidores, idSeguido)) {
         saida << "ERROR ALREADY_FOLLOWING" << std::endl;
+        return;
     }
 
     saida << "FOLLOWED" << std::endl;

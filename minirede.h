@@ -18,11 +18,23 @@ struct ListaSeguidores {
     NoSeguidor* inicio;
 };
 
+struct NoPublicacao {
+    int id;
+    int timestamp;
+    NoPublicacao* prox;
+    std::string texto;
+};
+
+struct ListaPublicacoes {
+    NoPublicacao* inicio;
+};
+
 struct Usuario {
     int id;
     char username[TAM_USERNAME];
     char nomeCompleto[TAM_NOME];
     ListaSeguidores listaSeguidores;
+    ListaPublicacoes listaPublicacoes;
 };
 struct NoArvoreUsuario {
     Usuario* usuario;
@@ -54,6 +66,7 @@ void listarUsuarios(MiniRede& rede, std::ostream& saida);
 void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& saida);
 void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida);
 
+bool inserirPublicacaoOrdenado(ListaPublicacoes &L, int id, int timestamp, char texto[]);
 void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp, const char texto[], std::ostream& saida);
 void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& saida);
 

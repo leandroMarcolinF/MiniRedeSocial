@@ -129,6 +129,12 @@ void processarComandos(MiniRede& rede, std::ostream& saida) {
             stream >> id;
             listarSeguindo(rede, id, saida);
 
+        } else if (comando == "ADD_POST") {
+            int idPost, idAutor, timestamp;
+            std::string texto;
+            stream >> idPost >> idAutor >> timestamp >> texto;
+            cadastrarPublicacao(rede, idPost, idAutor, timestamp, texto.c_str(), saida);
+
         } else {
             saida << "ERROR INVALID_COMMAND" << std::endl;
         }
@@ -181,6 +187,7 @@ void cadastrarUsuario(MiniRede& rede, int id, const char username[], const char 
     strncpy(usuarioNovo.nomeCompleto, nomeCompleto, TAM_NOME - 1);
     usuarioNovo.nomeCompleto[TAM_NOME - 1] = '\0';
     usuarioNovo.listaSeguidores.inicio = nullptr;
+    usuarioNovo.listaPublicacoes.inicio = nullptr;
 
     Usuario* inserido = inserirNaArvore(rede.raizArvoreUsuario, usuarioNovo, saida);
     if (inserido != nullptr) {
@@ -258,7 +265,6 @@ void listarUsuarios(MiniRede& rede, std::ostream& saida) {
 }
 
 bool inserirSeguidorOrdenado(ListaSeguidores &L, int id) {
-    NoSeguidor* no = new NoSeguidor{id, nullptr};
     NoSeguidor* atual = L.inicio;
     NoSeguidor* anterior = nullptr;
 
@@ -270,7 +276,7 @@ bool inserirSeguidorOrdenado(ListaSeguidores &L, int id) {
         atual = atual->prox;
     }
 
-    no->prox = atual;
+    NoSeguidor* no = new NoSeguidor{id, atual};
     if (anterior == nullptr) {
         L.inicio = no;
     } else {
@@ -285,21 +291,18 @@ void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& 
         saida << "ERROR CANNOT_FOLLOW_SELF" << std::endl;
         return;
     }
-    
-    Usuario* usuarioAchado = buscarNaArvorePorId(rede.raizArvoreUsuario, idSeguidor);
-    if (usuarioAchado == nullptr) {
+
+    Usuario* seguidor = buscarNaArvorePorId(rede.raizArvoreUsuario, idSeguidor);
+    Usuario* seguido  = buscarNaArvorePorId(rede.raizArvoreUsuario, idSeguido);
+
+    if (seguidor == nullptr || seguido == nullptr) {
         saida << "ERROR USER_NOT_FOUND" << std::endl;
         return;
     }
 
-    usuarioAchado = buscarNaArvorePorId(rede.raizArvoreUsuario, idSeguido);
-    if (usuarioAchado == nullptr) {
-        saida << "ERROR USER_NOT_FOUND" << std::endl;
-        return;
-    }
-
-    if(!inserirSeguidorOrdenado(usuarioAchado->listaSeguidores, idSeguidor)) {
+    if (!inserirSeguidorOrdenado(seguidor->listaSeguidores, idSeguido)) {
         saida << "ERROR ALREADY_FOLLOWING" << std::endl;
+        return;
     }
 
     saida << "FOLLOWED" << std::endl;
@@ -329,8 +332,44 @@ void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
     saida << "FOLLOWING_END" << std::endl;
 }
 
+bool inserirPublicacaoOrdenado(ListaPublicacoes &L, int id, int timestamp, const char texto[]) {
+    NoPublicacao* no = new NoPublicacao{id ,timestamp, nullptr, texto};
+    NoPublicacao* atual = L.inicio;
+    NoPublicacao* anterior = nullptr;
+
+    while (atual != nullptr && atual->id <= id) {
+        if (atual->id == id) {
+            return false;
+        }
+        anterior = atual;
+        atual = atual->prox;
+    }
+
+    no->prox = atual;
+    if (anterior == nullptr) {
+        L.inicio = no;
+    } else {
+        anterior->prox = no;
+    }
+
+    return true;
+
+}
+
 void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp, const char texto[], std::ostream& saida) {
-    // TODO
+
+    Usuario* usuarioAchado = buscarNaArvorePorId(rede.raizArvoreUsuario, idAutor);
+    if (usuarioAchado == nullptr) {
+        saida << "ERROR USER_NOT_FOUND" << std::endl;
+        return;
+    }
+
+    if(!inserirPublicacaoOrdenado(usuarioAchado->listaPublicacoes, idPost, timestamp, texto)) {
+        saida << "ERROR POST_EXISTS" << std::endl;
+    }
+
+    saida << "POST_ADDED" << std::endl;
+
 }
 
 void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& saida) {

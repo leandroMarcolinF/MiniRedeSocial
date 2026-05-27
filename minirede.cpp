@@ -10,6 +10,7 @@ void inicializarMiniRede(MiniRede& rede) {
     for (int i = 0; i < TAM_HASH; i++) {
         rede.tabelaHashUsuario[i] = nullptr;
     }
+    rede.listaPublicacoes.inicio = nullptr;
 }
 
 void liberarArvore(NoArvoreUsuario*& raiz) {
@@ -187,7 +188,6 @@ void cadastrarUsuario(MiniRede& rede, int id, const char username[], const char 
     strncpy(usuarioNovo.nomeCompleto, nomeCompleto, TAM_NOME - 1);
     usuarioNovo.nomeCompleto[TAM_NOME - 1] = '\0';
     usuarioNovo.listaSeguidores.inicio = nullptr;
-    usuarioNovo.listaPublicacoes.inicio = nullptr;
 
     Usuario* inserido = inserirNaArvore(rede.raizArvoreUsuario, usuarioNovo, saida);
     if (inserido != nullptr) {
@@ -332,8 +332,9 @@ void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
     saida << "FOLLOWING_END" << std::endl;
 }
 
-bool inserirPublicacaoOrdenado(ListaPublicacoes &L, int id, int timestamp, const char texto[]) {
-    NoPublicacao* no = new NoPublicacao{id ,timestamp, nullptr, texto};
+bool inserirPublicacaoOrdenado(ListaPublicacoes &L, int id, int idAutor, int timestamp, const char texto[]) {
+    NoPublicacao* no = new NoPublicacao{id , idAutor,timestamp, nullptr, texto};
+    no->listaCurtidasPost.inicio = nullptr; //lógica de curtida
     NoPublicacao* atual = L.inicio;
     NoPublicacao* anterior = nullptr;
 
@@ -364,7 +365,7 @@ void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp,
         return;
     }
 
-    if(!inserirPublicacaoOrdenado(usuarioAchado->listaPublicacoes, idPost, timestamp, texto)) {
+    if(!inserirPublicacaoOrdenado(rede.listaPublicacoes, idPost, idAutor, timestamp, texto)) {
         saida << "ERROR POST_EXISTS" << std::endl;
     }
 
@@ -373,6 +374,10 @@ void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp,
 }
 
 void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& saida) {
+    
+    NoCurtida* no = new NoCurtida{idUsuario};
+
+    // como caralhos eu acho o id da publicação sem ter que varrer todas as publicações? kkkkkkkkk fudeu
     // TODO
 }
 

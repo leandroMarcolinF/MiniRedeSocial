@@ -1,4 +1,5 @@
 #include "minirede.h"
+//#include <cstdio>
 #include <cstring>
 #include <new>
 #include <sstream>
@@ -135,6 +136,16 @@ void processarComandos(MiniRede& rede, std::ostream& saida) {
             std::string texto;
             stream >> idPost >> idAutor >> timestamp >> texto;
             cadastrarPublicacao(rede, idPost, idAutor, timestamp, texto.c_str(), saida);
+        
+        } else if (comando == "LIKE") {
+            int idAutor, idPost;
+            stream >> idAutor >> idPost;
+            curtirPublicacao(rede, idAutor, idPost, saida);
+
+        } else if (comando == "GET_NOTIFICATIONS") {
+            int idUsuario, k;
+            stream >> idUsuario >> k;
+            consultarNotificacoes(rede, idUsuario, k, saida);
 
         } else {
             saida << "ERROR INVALID_COMMAND" << std::endl;
@@ -188,6 +199,8 @@ void cadastrarUsuario(MiniRede& rede, int id, const char username[], const char 
     strncpy(usuarioNovo.nomeCompleto, nomeCompleto, TAM_NOME - 1);
     usuarioNovo.nomeCompleto[TAM_NOME - 1] = '\0';
     usuarioNovo.listaSeguidores.inicio = nullptr;
+    usuarioNovo.filaNotificacao.inicio = nullptr;
+    usuarioNovo.filaNotificacao.fim = nullptr;
 
     Usuario* inserido = inserirNaArvore(rede.raizArvoreUsuario, usuarioNovo, saida);
     if (inserido != nullptr) {
@@ -264,6 +277,21 @@ void listarUsuarios(MiniRede& rede, std::ostream& saida) {
     listarUsuariosEmOrdemId(rede.raizArvoreUsuario, saida);
 }
 
+void inserirNotificacao(MiniRede& rede, int idUsuarioNotificador, int idUsuarioNotificado, int idPostOrFollow) {
+
+    Usuario* usuario  = buscarNaArvorePorId(rede.raizArvoreUsuario, idUsuarioNotificado);
+    noNotificacao* no = new noNotificacao{idUsuarioNotificador , idPostOrFollow, nullptr};
+
+    if(usuario->filaNotificacao.inicio == nullptr){
+        usuario->filaNotificacao.inicio = no;
+        usuario->filaNotificacao.fim = no;
+    }
+    else{
+        no->prox = usuario->filaNotificacao.fim;
+        usuario->filaNotificacao.inicio = no;
+    }
+}
+
 bool inserirSeguidorOrdenado(ListaSeguidores &L, int id) {
     NoSeguidor* atual = L.inicio;
     NoSeguidor* anterior = nullptr;
@@ -304,6 +332,8 @@ void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& 
         saida << "ERROR ALREADY_FOLLOWING" << std::endl;
         return;
     }
+
+    inserirNotificacao(rede, seguidor->id, seguido->id, -1);
 
     saida << "FOLLOWED" << std::endl;
 }
@@ -367,22 +397,127 @@ void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp,
 
     if(!inserirPublicacaoOrdenado(rede.listaPublicacoes, idPost, idAutor, timestamp, texto)) {
         saida << "ERROR POST_EXISTS" << std::endl;
+        return;
     }
 
     saida << "POST_ADDED" << std::endl;
 
 }
 
-void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& saida) {
-    
-    NoCurtida* no = new NoCurtida{idUsuario};
+NoPublicacao* encontrarPublicacao(MiniRede& rede, ListaPublicacoes &L, int idPost){
 
-    // como caralhos eu acho o id da publicação sem ter que varrer todas as publicações? kkkkkkkkk fudeu
+    NoPublicacao* atual = L.inicio;
+
+    while (atual != nullptr && atual->id <= idPost) {
+        if (atual->id == idPost) {
+            return atual;
+        }
+        atual = atual->prox;
+    }
+
+    return nullptr;
+}
+
+NoCurtida* encontrarCurtida(MiniRede& rede, ListaCurtidasPost &L, int idUsuario){
+    NoCurtida* atual = L.inicio;
+
+    while (atual != nullptr && atual->idUsuario <= idUsuario) {
+        if (atual->idUsuario == idUsuario) {
+            return atual;
+        }
+        atual = atual->prox;
+    }
+
+    return nullptr;
+
+}
+
+bool inserirCurtidaOrdenado(ListaCurtidasPost &L, int idUsuario) {
+    NoCurtida* atual = L.inicio;
+    NoCurtida* anterior = nullptr;
+
+    while (atual != nullptr && atual->idUsuario <= idUsuario) {
+        if (atual->idUsuario == idUsuario) {
+            return false;
+        }
+        anterior = atual;
+        atual = atual->prox;
+    }
+
+    NoCurtida* no = new NoCurtida{idUsuario};
+    no->prox = atual;
+    if (anterior == nullptr) {
+        L.inicio = no;
+    } else {
+        anterior->prox = no;
+    }
+
+    return true;
+}
+
+void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& saida) {
+
+    Usuario* usuarioAchado = buscarNaArvorePorId(rede.raizArvoreUsuario, idUsuario);
+    if (usuarioAchado == nullptr) {
+        saida << "ERROR USER_NOT_FOUND" << std::endl;
+        return;
+    }
+
+    NoPublicacao* publicacaoCurtida = encontrarPublicacao(rede, rede.listaPublicacoes, idPost);
+    if (publicacaoCurtida == nullptr) {
+        saida << "ERROR POST_NOT_FOUND" << std::endl;
+        return;
+    }
+    
+    if (!inserirCurtidaOrdenado(publicacaoCurtida->listaCurtidasPost, idUsuario)) {
+        saida << "ERROR ALREADY_LIKED" << std::endl;
+        return;
+    }
+
+    inserirNotificacao(rede, idUsuario, publicacaoCurtida->idAutor, idPost);
+
+    saida << "LIKED" << std::endl;
     // TODO
 }
 
 void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& saida) {
-    // TODO
+    Usuario* usuario = buscarNaArvorePorId(rede.raizArvoreUsuario, idUsuario);
+    if (usuario == nullptr) {
+        saida << "ERROR USER_NOT_FOUND" << std::endl;
+        return;
+    }
+
+    saida << "NOTIFICATIONS_BEGIN" << std::endl;
+
+    for (int i = 0; i < k; i++) {
+        if (usuario->filaNotificacao.inicio == nullptr) break;
+
+        noNotificacao* atual = usuario->filaNotificacao.inicio;
+        noNotificacao* anterior = nullptr;
+
+        while (atual->prox != nullptr) {
+            anterior = atual;
+            atual = atual->prox;
+        }
+
+        if (atual->isFollowNot == -1) {
+            saida << "NOTIFICATION FOLLOW " << atual->idUsuarioNotificador << std::endl;
+        } else {
+            saida << "NOTIFICATION LIKE " << atual->idUsuarioNotificador << " " << atual->isFollowNot << std::endl;
+        }
+
+        if (anterior == nullptr) {
+            usuario->filaNotificacao.inicio = nullptr;
+            usuario->filaNotificacao.fim = nullptr;
+        } else {
+            anterior->prox = nullptr;
+            usuario->filaNotificacao.fim = anterior;
+        }
+
+        delete atual;
+    }
+
+    saida << "NOTIFICATIONS_END" << std::endl;
 }
 
 void gerarFeed(MiniRede& rede, int idUsuario, int k, std::ostream& saida) {

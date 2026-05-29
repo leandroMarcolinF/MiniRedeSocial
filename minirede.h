@@ -40,11 +40,23 @@ struct ListaPublicacoes {
     NoPublicacao* inicio;
 };
 
+struct noNotificacao {
+    int idUsuarioNotificador;
+    int isFollowNot;
+    noNotificacao* prox;
+};
+
+struct FilaNotificacao {
+    noNotificacao* inicio;
+    noNotificacao* fim;
+};
+
 struct Usuario {
     int id;
     char username[TAM_USERNAME];
     char nomeCompleto[TAM_NOME];
     ListaSeguidores listaSeguidores;
+    FilaNotificacao filaNotificacao;
 };
 
 struct NoArvoreUsuario {
@@ -75,11 +87,16 @@ void buscarUsuarioPorId(MiniRede& rede, int id, std::ostream& saida);
 void buscarUsuarioPorUsername(MiniRede& rede, const char username[], std::ostream& saida);
 void listarUsuarios(MiniRede& rede, std::ostream& saida);
 
+void inserirNotificacao(MiniRede& rede, int idUsuarioNotificador, int idUsuarioNotificado, int idPostOrFollow);
+
 void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& saida);
 void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida);
 
 bool inserirPublicacaoOrdenado(ListaPublicacoes &L, int id, int idAutor, int timestamp, char texto[]);
 void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp, const char texto[], std::ostream& saida);
+NoPublicacao* encontrarPublicacao(MiniRede& rede, ListaPublicacoes &L, int idPost);
+NoCurtida* encontrarCurtida(MiniRede& rede, ListaCurtidasPost &L, int idUsuario);
+bool inserirCurtidaOrdenado(ListaCurtidasPost &L, int idUsuario);
 void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& saida);
 
 void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& saida);

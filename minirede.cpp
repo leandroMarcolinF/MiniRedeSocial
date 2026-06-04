@@ -374,7 +374,7 @@ bool inserirPublicacaoOrdenado(ListaPublicacoes &L, int id, int idAutor, int tim
     NoPublicacao* atual = L.inicio;
     NoPublicacao* anterior = nullptr;
 
-    while (atual != nullptr && timestamp <= atual->timestamp) {
+    while (atual != nullptr && id <= atual->id) {
         if (atual->id == id) {
             return false;
         }
@@ -529,6 +529,8 @@ void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& s
 
 void gerarFeed(MiniRede& rede, int idUsuario, int k, std::ostream& saida) {
 
+    //fazer radix para ordenar por timestamp!
+
     Usuario* usuarioAchado = buscarNaArvorePorId(rede.raizArvoreUsuario, idUsuario);
     if (usuarioAchado == nullptr) {
         saida << "ERROR USER_NOT_FOUND" << std::endl;
@@ -561,7 +563,13 @@ void gerarFeed(MiniRede& rede, int idUsuario, int k, std::ostream& saida) {
 }
 
 void listarTopPosts(MiniRede& rede, int k, std::ostream& saida) {
-    // TODO
+
+    //fazer radix para ordenar por curtida!
+    //resolver caso da ordenação por id para inserção
+
+    NoPublicacao* publicacaoAtual = rede.listaPublicacoes.inicio;
+
+
 }
 
 int main() {

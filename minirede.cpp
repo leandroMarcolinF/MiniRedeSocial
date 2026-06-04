@@ -2,6 +2,7 @@
 //#include <cstdio>
 #include <cstring>
 #include <new>
+#include <readline/chardefs.h>
 #include <sstream>
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -146,6 +147,11 @@ void processarComandos(MiniRede& rede, std::ostream& saida) {
             int idUsuario, k;
             stream >> idUsuario >> k;
             consultarNotificacoes(rede, idUsuario, k, saida);
+
+        } else if (comando == "FEED") {
+            int idUsuario, k;
+            stream >> idUsuario >> k;
+            gerarFeed(rede, idUsuario, k, saida);
 
         } else {
             saida << "ERROR INVALID_COMMAND" << std::endl;
@@ -363,12 +369,12 @@ void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
 }
 
 bool inserirPublicacaoOrdenado(ListaPublicacoes &L, int id, int idAutor, int timestamp, const char texto[]) {
-    NoPublicacao* no = new NoPublicacao{id , idAutor,timestamp, nullptr, texto};
+    NoPublicacao* no = new NoPublicacao{id, idAutor, timestamp, 0,nullptr, texto};
     no->listaCurtidasPost.inicio = nullptr; //lógica de curtida
     NoPublicacao* atual = L.inicio;
     NoPublicacao* anterior = nullptr;
 
-    while (atual != nullptr && atual->id <= id) {
+    while (atual != nullptr && timestamp <= atual->timestamp) {
         if (atual->id == id) {
             return false;
         }
@@ -474,6 +480,7 @@ void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& s
         return;
     }
 
+    publicacaoCurtida->curtidas++;
     inserirNotificacao(rede, idUsuario, publicacaoCurtida->idAutor, idPost);
 
     saida << "LIKED" << std::endl;
@@ -521,7 +528,36 @@ void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& s
 }
 
 void gerarFeed(MiniRede& rede, int idUsuario, int k, std::ostream& saida) {
-    // TODO
+
+    Usuario* usuarioAchado = buscarNaArvorePorId(rede.raizArvoreUsuario, idUsuario);
+    if (usuarioAchado == nullptr) {
+        saida << "ERROR USER_NOT_FOUND" << std::endl;
+        return;
+    }
+
+    NoPublicacao* publicacaoAtual = rede.listaPublicacoes.inicio;
+
+    int i = 0;
+
+    saida << "FEED_BEGIN" << std::endl;
+
+    while(publicacaoAtual != nullptr && i < k){
+
+        NoSeguidor* seguidorAtual = usuarioAchado->listaSeguidores.inicio;
+        
+        while(seguidorAtual != nullptr){
+            if (seguidorAtual->id == publicacaoAtual->idAutor) {
+                saida << "POST " << publicacaoAtual->id << " " << publicacaoAtual->idAutor << " " << publicacaoAtual->timestamp << " " << publicacaoAtual->curtidas << " " << publicacaoAtual->texto.c_str() << std::endl;
+                i++;
+                break;
+            }
+            seguidorAtual = seguidorAtual->prox;
+        }
+        publicacaoAtual = publicacaoAtual->prox;
+    }
+
+
+    saida << "FEED_END" << std::endl;
 }
 
 void listarTopPosts(MiniRede& rede, int k, std::ostream& saida) {
@@ -538,4 +574,3 @@ int main() {
 
     return 0;
 }
-

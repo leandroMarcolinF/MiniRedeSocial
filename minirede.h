@@ -31,6 +31,7 @@ struct NoPublicacao {
     int id;
     int idAutor;
     int timestamp;
+    int curtidas;
     NoPublicacao* prox;
     std::string texto;
     ListaCurtidasPost listaCurtidasPost;

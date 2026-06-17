@@ -93,7 +93,7 @@ void inserirNotificacao(MiniRede& rede, int idUsuarioNotificador, int idUsuarioN
 void seguirUsuario(MiniRede& rede, int idSeguidor, int idSeguido, std::ostream& saida);
 void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida);
 
-bool inserirPublicacaoOrdenado(ListaPublicacoes &L, int id, int idAutor, int timestamp, char texto[]);
+bool inserirPublicacao(ListaPublicacoes &L, int id, int idAutor, int timestamp, char texto[]);
 void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp, const char texto[], std::ostream& saida);
 NoPublicacao* encontrarPublicacao(MiniRede& rede, ListaPublicacoes &L, int idPost);
 NoCurtida* encontrarCurtida(MiniRede& rede, ListaCurtidasPost &L, int idUsuario);

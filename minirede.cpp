@@ -368,13 +368,14 @@ void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
     saida << "FOLLOWING_END" << std::endl;
 }
 
-bool inserirPublicacaoOrdenado(ListaPublicacoes &L, int id, int idAutor, int timestamp, const char texto[]) {
+bool inserirPublicacao(ListaPublicacoes &L, int id, int idAutor, int timestamp, const char texto[]) {
     NoPublicacao* no = new NoPublicacao{id, idAutor, timestamp, 0,nullptr, texto};
     no->listaCurtidasPost.inicio = nullptr; //lógica de curtida
+
     NoPublicacao* atual = L.inicio;
     NoPublicacao* anterior = nullptr;
 
-    while (atual != nullptr && id <= atual->id) {
+    while (atual != nullptr) {
         if (atual->id == id) {
             return false;
         }
@@ -382,7 +383,6 @@ bool inserirPublicacaoOrdenado(ListaPublicacoes &L, int id, int idAutor, int tim
         atual = atual->prox;
     }
 
-    no->prox = atual;
     if (anterior == nullptr) {
         L.inicio = no;
     } else {
@@ -390,7 +390,6 @@ bool inserirPublicacaoOrdenado(ListaPublicacoes &L, int id, int idAutor, int tim
     }
 
     return true;
-
 }
 
 void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp, const char texto[], std::ostream& saida) {
@@ -401,7 +400,7 @@ void cadastrarPublicacao(MiniRede& rede, int idPost, int idAutor, int timestamp,
         return;
     }
 
-    if(!inserirPublicacaoOrdenado(rede.listaPublicacoes, idPost, idAutor, timestamp, texto)) {
+    if(!inserirPublicacao(rede.listaPublicacoes, idPost, idAutor, timestamp, texto)) {
         saida << "ERROR POST_EXISTS" << std::endl;
         return;
     }

@@ -153,6 +153,11 @@ void processarComandos(MiniRede& rede, std::ostream& saida) {
             stream >> idUsuario >> k;
             gerarFeed(rede, idUsuario, k, saida);
 
+        } else if (comando == "TOP_POSTS") {
+            int k;
+            stream >> k;
+            listarTopPosts(rede, k, saida);
+
         } else {
             saida << "ERROR INVALID_COMMAND" << std::endl;
         }
@@ -413,7 +418,7 @@ NoPublicacao* encontrarPublicacao(MiniRede& rede, ListaPublicacoes &L, int idPos
 
     NoPublicacao* atual = L.inicio;
 
-    while (atual != nullptr && atual->id <= idPost) {
+    while (atual != nullptr) {
         if (atual->id == idPost) {
             return atual;
         }
@@ -526,9 +531,85 @@ void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& s
     saida << "NOTIFICATIONS_END" << std::endl;
 }
 
+void insertionSortCurtidas(ListaPublicacoes &L){
+    NoPublicacao* ordenada = nullptr;
+
+    while (L.inicio != nullptr) {
+        NoPublicacao* atual = L.inicio;
+        L.inicio = L.inicio->prox;
+
+        if (ordenada == nullptr ||
+            atual->curtidas > ordenada->curtidas ||
+            (atual->curtidas == ordenada->curtidas &&
+             atual->id < ordenada->id))
+        {
+            atual->prox = ordenada;
+            ordenada = atual;
+        }
+        else {
+            NoPublicacao* p = ordenada;
+
+            while (p->prox != nullptr &&
+                   (
+                       p->prox->curtidas > atual->curtidas ||
+                       (
+                           p->prox->curtidas == atual->curtidas &&
+                           p->prox->id < atual->id
+                       )
+                   ))
+            {
+                p = p->prox;
+            }
+
+            atual->prox = p->prox;
+            p->prox = atual;
+        }
+    }
+
+    L.inicio = ordenada;
+}
+
+void insertionSortTimestamp(ListaPublicacoes &L){
+    NoPublicacao* ordenada = nullptr;
+
+    while (L.inicio != nullptr) {
+        NoPublicacao* atual = L.inicio;
+        L.inicio = L.inicio->prox;
+
+        if (ordenada == nullptr ||
+            atual->timestamp > ordenada->timestamp ||
+            (atual->timestamp == ordenada->timestamp &&
+             atual->id < ordenada->id))
+        {
+            atual->prox = ordenada;
+            ordenada = atual;
+        }
+        else {
+            NoPublicacao* p = ordenada;
+
+            while (p->prox != nullptr &&
+                   (
+                       p->prox->timestamp > atual->timestamp ||
+                       (
+                           p->prox->timestamp == atual->timestamp &&
+                           p->prox->id < atual->id
+                       )
+                   ))
+            {
+                p = p->prox;
+            }
+
+            atual->prox = p->prox;
+            p->prox = atual;
+        }
+    }
+
+    L.inicio = ordenada;
+}
+
 void gerarFeed(MiniRede& rede, int idUsuario, int k, std::ostream& saida) {
 
-    //fazer radix para ordenar por timestamp!
+    insertionSortTimestamp(rede.listaPublicacoes);
 
     Usuario* usuarioAchado = buscarNaArvorePorId(rede.raizArvoreUsuario, idUsuario);
     if (usuarioAchado == nullptr) {
@@ -557,18 +638,26 @@ void gerarFeed(MiniRede& rede, int idUsuario, int k, std::ostream& saida) {
         publicacaoAtual = publicacaoAtual->prox;
     }
 
-
     saida << "FEED_END" << std::endl;
 }
 
 void listarTopPosts(MiniRede& rede, int k, std::ostream& saida) {
 
-    //fazer radix para ordenar por curtida!
-    //resolver caso da ordenação por id para inserção
+    insertionSortCurtidas(rede.listaPublicacoes);
 
     NoPublicacao* publicacaoAtual = rede.listaPublicacoes.inicio;
 
+    int i = 0;
 
+    saida << "TOP_POSTS_BEGIN" << std::endl;
+
+    while(publicacaoAtual != nullptr && i < k){
+        saida << "POST " << publicacaoAtual->id << " " << publicacaoAtual->idAutor << " " << publicacaoAtual->timestamp << " " << publicacaoAtual->curtidas << " " << publicacaoAtual->texto.c_str() << std::endl;
+        i++;
+        publicacaoAtual = publicacaoAtual->prox;
+    }
+
+    saida << "TOP_POSTS_END" << std::endl;
 }
 
 int main() {

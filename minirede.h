@@ -101,6 +101,9 @@ bool inserirCurtidaOrdenado(ListaCurtidasPost &L, int idUsuario);
 void curtirPublicacao(MiniRede& rede, int idUsuario, int idPost, std::ostream& saida);
 
 void consultarNotificacoes(MiniRede& rede, int idUsuario, int k, std::ostream& saida);
+
+void insertionSortCurtidas(ListaPublicacoes &L);
+void insertionSortTimestamp(ListaPublicacoes &L);
 void gerarFeed(MiniRede& rede, int idUsuario, int k, std::ostream& saida);
 void listarTopPosts(MiniRede& rede, int k, std::ostream& saida);
 

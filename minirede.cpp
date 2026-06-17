@@ -62,7 +62,9 @@ void processarComandos(MiniRede& rede, std::istream& entrada, std::ostream& said
             buscarUsuarioPorId(rede, id, saida);
 
         } else if (comando == "LIST_USERS") {
+            saida << "USERS_BEGIN" << std::endl;
             listarUsuarios(rede, saida);
+            saida << "USERS_END" << std::endl;
 
         } else if (comando == "FIND_USERNAME") {
             std::string username;
@@ -240,12 +242,12 @@ void inserirNotificacao(MiniRede& rede, int idUsuarioNotificador, int idUsuarioN
     Usuario* usuario  = buscarNaArvorePorId(rede.raizArvoreUsuario, idUsuarioNotificado);
     noNotificacao* no = new noNotificacao{idUsuarioNotificador , idPostOrFollow, nullptr};
 
-    if(usuario->filaNotificacao.inicio == nullptr){
+    if (usuario->filaNotificacao.inicio == nullptr) {
         usuario->filaNotificacao.inicio = no;
         usuario->filaNotificacao.fim = no;
     }
-    else{
-        no->prox = usuario->filaNotificacao.fim;
+    else {
+        no->prox = usuario->filaNotificacao.inicio;
         usuario->filaNotificacao.inicio = no;
     }
 }
@@ -322,7 +324,7 @@ void listarSeguindo(MiniRede& rede, int idUsuario, std::ostream& saida) {
 
 bool inserirPublicacao(ListaPublicacoes &L, int id, int idAutor, int timestamp, const char texto[]) {
     NoPublicacao* no = new NoPublicacao{id, idAutor, timestamp, 0,nullptr, texto};
-    no->listaCurtidasPost.inicio = nullptr; //lógica de curtida
+    no->listaCurtidasPost.inicio = nullptr;
 
     NoPublicacao* atual = L.inicio;
     NoPublicacao* anterior = nullptr;
